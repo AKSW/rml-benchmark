@@ -19,6 +19,19 @@ SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 OPT_MAPPING_FILE="${OPT_MAPPING_FILES[0]}"
 
 
+# If no output file is specified log a warning that a temporary file is created anyway
+
+[ -z "$OPT_OUT_FILE" ] && USE_TMP_OUTPUT=true || USE_TMP_OUTPUT=false
+if [ "$USE_TMP_OUTPUT" = true ]; then
+  OPT_OUT_FILE=`mktemp --tmpdir sdm-rdfizer.XXXXX`
+  echoerr "[WARN] Output is written to $OPT_OUT_FILE and will be 'cat' from it"
+fi
+
+OUT_PATH=`realpath "$OPT_OUT_FILE"`
+OUT_FOLDER=`dirname "$OUT_PATH"`
+OUT_FILENAME=`basename "$OUT_PATH"`
+
+
 # TODO Do we need to set enrichment to false for large files?
 
 CONF_FILE="sdm-rdfizer.generated.config.ini"
@@ -28,7 +41,7 @@ main_directory: .
 
 [datasets]
 number_of_datasets: 1
-output_folder: \${default:main_directory}
+output_folder: $OUT_FOLDER/
 remove_duplicate: ${OPT_UNIQUE}
 all_in_one_file: no
 name:joinCondition
@@ -37,15 +50,28 @@ large_file: ${OPT_LARGE}
 ordered: ${OPT_SORT}
 
 [dataset1]
-name: rdfizer.output
+name: $OUT_FILENAME
 mapping: $(realpath "$OPT_MAPPING_FILE")
 " > "$CONF_FILE"
 
 
+set +e
 python -m "rdfizer" -c "$CONF_FILE"
 EXIT_CODE="$?"
+set -e
 
-[[ "$OPT_KEEP" != true ]] && rm "$CONF_FILE"
+# RDFizer appends .nt extension to the out file
+mv "$OPT_OUT_FILE.nt" "$OPT_OUT_FILE"
+
+if [ "$USE_TMP_OUTPUT" = true ]; then
+  cat "$OPT_OUT_FILE"
+fi
+
+
+if [ "$OPT_KEEP" != true ]; then
+  [ "$USE_TMP_OUTPUT" = true ] && rm "$OPT_OUT_FILE"
+  rm "$CONF_FILE"
+fi
 
 exit "$EXIT_CODE"
 

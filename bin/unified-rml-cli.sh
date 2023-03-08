@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eu -o functrace -o pipefail
+
 echoerr() { echo "$@" >&2; }
 die() { echoerr "$*"; exit 2; }  # complain to STDERR and exit with error
 needs_arg() { if [ -z "$OPTARG" ]; then die "No arg for --$OPT option"; fi; }
@@ -15,6 +17,7 @@ where options are:
        --out-file=path   Write output to the specified file. IMPORTANT: the '=' is mandatory.
        --out-format=fmt  (not yet supported; defaults to nquads)
     -k --keep            Keep temporary resources, such as generated config files, rather then removing them when done
+    -x                   Enable bash debugging (set -x)
 "
 
 if [ $# -eq 0 ]; then
@@ -31,7 +34,7 @@ OPT_OUT_FILE=
 OPT_KEEP=
 
 # Based on https://stackoverflow.com/questions/402377/using-getopts-to-process-long-and-short-command-line-options
-while getopts uslm:k-: OPT; do
+while getopts uslm:kx-: OPT; do
   if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
     OPT="${OPTARG%%=*}"       # extract long option name
     OPTARG="${OPTARG#$OPT}"   # extract long o$ption argument (may be empty)
@@ -44,6 +47,7 @@ while getopts uslm:k-: OPT; do
     m | memory )    needs_arg; OPT_MEMORY="$OPTARG" ;;
         out-file )  needs_arg; OPT_OUT_FILE="$OPTARG" ;;
     k | keep )      OPT_KEEP=true ;;
+    x )             set -x ;;
     ??* )           die "Illegal option --$OPT" ;;  # bad long option
     ? )             exit 2 ;;  # bad short option (error reported via getopts)
   esac
