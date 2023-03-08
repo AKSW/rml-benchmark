@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# From: https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$SCRIPT_DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+
+#############################
+
+. "$SCRIPT_DIR/unified-rml-cli.sh"
+
+JAVA=${JAVA_HOME:+$JAVA_HOME/bin/}java
+
+[[ "$OPT_SORT" = true ]] && die "RMLMapper does not support native sorting"
+
+$JAVA ${OPT_MEMORY:+"-Xmx${OPT_MEMORY}g"} -jar "$SCRIPT_DIR/../target/tools/rmlmapper/rmlmapper-6.1.3-r367-all.jar" ${OPT_OUT_FILE:+--outputfile "$OPT_OUT_FILE"} ${OPT_UNIQUE:+-d} ${OPT_MAPPING_FILES[@]/#/-m }
+
+

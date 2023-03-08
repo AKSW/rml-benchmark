@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# From: https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+  SOURCE=$(readlink "$SOURCE")
+  [[ $SOURCE != /* ]] && SOURCE=$SCRIPT_DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+
+#############################
+
+. "$SCRIPT_DIR/unified-rml-cli.sh"
+
+
+[[ "${#OPT_MAPPING_FILES[@]}" != 1 ]] && die "This wrapper presently only supports exactly one mapping file"
+
+OPT_MAPPING_FILE="${OPT_MAPPING_FILES[0]}"
+
+
+# TODO Do we need to set enrichment to false for large files?
+
+CONF_FILE="sdm-rdfizer.generated.config.ini"
+echo "
+[default]
+main_directory: .
+
+[datasets]
+number_of_datasets: 1
+output_folder: \${default:main_directory}
+remove_duplicate: ${OPT_UNIQUE}
+all_in_one_file: no
+name:joinCondition
+enrichment: yes
+large_file: ${OPT_LARGE}
+ordered: ${OPT_SORT}
+
+[dataset1]
+name: rdfizer.output
+mapping: $(realpath "$OPT_MAPPING_FILE")
+" > "$CONF_FILE"
+
+
+python -m "rdfizer" -c "$CONF_FILE"
+EXIT_CODE="$?"
+
+[[ "$OPT_KEEP" != true ]] && rm "$CONF_FILE"
+
+exit "$EXIT_CODE"
+
+
