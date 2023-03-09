@@ -14,4 +14,6 @@ setup_carml_1.1.9: ## Install this specific version of carml
 setup_sdm-rdfizer_latest:   ## Install the latest version of SDM RDFizer via pip
 	pip install rdfizer
 
+setup_morph-kgc_latest: ## Install the latest version of Morph-KGC via pip
+	pip install morph-kgc
 
