@@ -10,13 +10,13 @@ needs_arg() { if [ -z "$OPTARG" ]; then die "No arg for --$OPT option"; fi; }
 usage="$(basename "$0") [options] mapping-file -- Unified RML wrapper launcher
 
 where options are:
-    -u --unique          Use the tools native distinct feature (fails if unsupported)
-    -s --sort            Use the tools native sorting feature (fails if unsupported)
-    -l --large           Use the tools native large file feature
+    -u --unique          Use the tool's native distinct feature (fails if unsupported)
+    -s --sort            Use the tool's native sorting feature (fails if unsupported)
+    -l --large           Use the tool's native large file feature
     -m --memory          Configure the tool for the given amount of memory in GIGABYTES.
        --out-file=path   Write output to the specified file. IMPORTANT: the '=' is mandatory.
        --out-format=fmt  (not yet supported; defaults to nquads)
-    -k --keep            Keep temporary resources, such as generated config files, rather then removing them when done
+    -k --keep            Keep temporary resources, such as generated config files, rather than removing them when done
     -x                   Enable bash debugging (set -x)
 "
 
