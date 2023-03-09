@@ -23,7 +23,7 @@ OPT_MAPPING_FILE="${OPT_MAPPING_FILES[0]}"
 
 [ -z "$OPT_OUT_FILE" ] && USE_TMP_OUTPUT=true || USE_TMP_OUTPUT=false
 if [ "$USE_TMP_OUTPUT" = true ]; then
-  OPT_OUT_FILE=`mktemp --tmpdir sdm-rdfizer.XXXXX`
+  OPT_OUT_FILE=`mktemp --dry-run --tmpdir morph-kgc-XXXXX`
   echoerr "[WARN] No output file specified. Output is written to $OPT_OUT_FILE and will be 'cat' from it"
 fi
 
@@ -31,37 +31,30 @@ OUT_PATH=`realpath "$OPT_OUT_FILE"`
 OUT_FOLDER=`dirname "$OUT_PATH"`
 OUT_FILENAME=`basename "$OUT_PATH"`
 
+[[ "$OUT_FILENAME" =~ [.] ]] && die "Dots '.' in filenames cause mismatch between specified and actual output file. Rejected by this wrapper."
 
-# TODO Do we need to set enrichment to false for large files?
 
-CONF_FILE="sdm-rdfizer.generated.config.ini"
+CONF_FILE="morph-kgc.generated.config.ini"
 echo "
 [default]
-main_directory: .
+#main_directory: .
+mappings: $(realpath "$OPT_MAPPING_FILE")
 
-[datasets]
-number_of_datasets: 1
-output_folder: $OUT_FOLDER/
-remove_duplicate: ${OPT_UNIQUE}
-all_in_one_file: no
-name:joinCondition
-enrichment: yes
-large_file: ${OPT_LARGE}
-ordered: ${OPT_SORT}
-
-[dataset1]
-name: $OUT_FILENAME
-mapping: $(realpath "$OPT_MAPPING_FILE")
+[CONFIGURATION]
+output_file: $OPT_OUT_FILE
+output_format: N-QUADS
+#number_of_processes
+#mapping_partitioning
 " > "$CONF_FILE"
 
 
 set +e
-python -m "rdfizer" -c "$CONF_FILE"
+python -m "morph_kgc" "$CONF_FILE"
 EXIT_CODE="$?"
 set -e
 
 # RDFizer appends .nt extension to the out file
-mv "$OPT_OUT_FILE.nt" "$OPT_OUT_FILE"
+mv "$OPT_OUT_FILE.nq" "$OPT_OUT_FILE"
 
 if [ "$USE_TMP_OUTPUT" = true ]; then
   cat "$OPT_OUT_FILE"

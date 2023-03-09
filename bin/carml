@@ -18,5 +18,5 @@ JAVA=${JAVA_HOME:+$JAVA_HOME/bin/}java
 [[ "$OPT_SORT" = true ]] && die "Carml does not support native sorting"
 [[ "$OPT_UNIQUE" = true ]] && die "Carml does not support native uniqueness"
 
-$JAVA ${OPT_MEMORY:+"-Xmx${OPT_MEMORY}g"} -jar "$SCRIPT_DIR/../target/tools/carml/carml-jar-jena-1.1.0-0.4.6.jar" map ${OPT_OUT_FILE:+--output "$OPT_OUT_FILE"} ${OPT_MAPPING_FILES[@]/#/-m }
+$JAVA ${OPT_MEMORY:+"-Xmx${OPT_MEMORY}g"} -jar "$SCRIPT_DIR/../target/tools/carml/carml-jar-jena-1.1.0-0.4.6.jar" map -r . ${OPT_OUT_FILE:+--output "$OPT_OUT_FILE"} ${OPT_MAPPING_FILES[@]/#/-m }
 
